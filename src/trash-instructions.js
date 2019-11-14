@@ -50,9 +50,22 @@ const trashInstructions = (req, res) => {
       imageUrl = RECOLOGY_IMAGE_URLS.other;
     }
 
+    // Send back a Slack-formatted block response
     res.send({
-      description,
-      imageUrl
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdown',
+            text: description,
+          },
+          accessory: {
+            type: 'image',
+            image_url: imageUrl,
+            alt_text: destinationBin,
+          },
+        }
+      ]
     });
   });
 }
