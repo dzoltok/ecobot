@@ -1,15 +1,13 @@
-// const express = require('express');
-// const https = require('https')
 const rp = require('request-promise');
 
 const RECOLLECT_URL = 'https://api.recollect.net';
 const RECOLLECT_PATH = '/api/areas/recology-1051/services/waste/pages';
 
-const RECOLOGY_IMAGE_URLS = {
-  landfill: 'https://recollect-images.global.ssl.fastly.net/api/image/200/recology.blackbin.svg',
-  recycling: 'https://recollect-images.global.ssl.fastly.net/api/image/200/recology.bluebin.svg',
-  compost: 'https://recollect-images.global.ssl.fastly.net/api/image/200/recology.greenbin.svg',
-  other: 'https://recollect-images.global.ssl.fastly.net/api/image/200/recology.otherbin.svg'
+const BIN_IMAGES = {
+  landfill: 'https://onemedical-ecobot.herokuapp.com/images/black-bin.png',
+  recycling: 'https://onemedical-ecobot.herokuapp.com/images/blue-bin.png',
+  compost: 'https://onemedical-ecobot.herokuapp.com/images/green-bin.png',
+  other: 'https://onemedical-ecobot.herokuapp.com/images/other-bin.png'
 }
 
 // Required when fetching single items, as response structure is inconsistent otherwise
@@ -38,16 +36,16 @@ const trashInstructions = (req, res) => {
       uri: `${RECOLLECT_URL}${RECOLLECT_PATH}/en-US/${bestResult.id}.json`,
     });
   }).then(item => {
-    const destinationBin = item.sections[4].title.toLowerCase();
+    const destination = item.sections[4].title.toLowerCase();
 
     let description, imageUrl;
 
-    if (RECOLOGY_IMAGE_URLS[destinationBin]) {
+    if (BIN_IMAGES[destination]) {
       description = toSentenceCase(item.sections[2].rows[0].html);
-      imageUrl = RECOLOGY_IMAGE_URLS[destinationBin];
+      imageUrl = BIN_IMAGES[destination];
     } else {
-      description = `${item.sections[2].rows[0].html} has special instructions, please visit https://www.recology.com/recology-san-francisco/what-bin/`;
-      imageUrl = RECOLOGY_IMAGE_URLS.other;
+      description = `${item.sections[2].rows[0].html} requires special handling, please visit [Recology](https://www.recology.com/recology-san-francisco/what-bin/) for more information.`;
+      imageUrl = BIN_IMAGES.other;
     }
 
     // Send back a Slack-formatted block response
@@ -62,10 +60,16 @@ const trashInstructions = (req, res) => {
           accessory: {
             type: 'image',
             image_url: imageUrl,
-            alt_text: destinationBin,
+            alt_text: destination,
           },
         }
-      ]
+      ],
+      response_type: 'in_channel',
+    });
+  }).catch(_err => {
+    res.send({
+      response_type: 'ephemeral',
+      'text': "Sorry, Ecobot couldn't process your message right now. Please try again."
     });
   });
 }
