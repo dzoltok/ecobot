@@ -54,17 +54,16 @@ const trashInstructions = (req, res) => {
         {
           type: 'section',
           text: {
-            type: 'mrkdown',
+            type: 'mrkdwn',
             text: description,
           },
           accessory: {
             type: 'image',
             image_url: imageUrl,
             alt_text: destination,
-          },
+          }
         }
-      ],
-      response_type: 'in_channel',
+      ]
     });
   }).catch(_err => {
     res.send({
