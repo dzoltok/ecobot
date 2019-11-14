@@ -44,7 +44,7 @@ const trashInstructions = (req, res) => {
       description = toSentenceCase(item.sections[2].rows[0].html);
       imageUrl = BIN_IMAGES[destination];
     } else {
-      description = `${item.sections[2].rows[0].html} requires special handling, please visit [Recology](https://www.recology.com/recology-san-francisco/what-bin/) for more information.`;
+      description = `${item.sections[2].rows[0].html} requires special handling, please visit https://www.recology.com/recology-san-francisco/what-bin/ for more information.`;
       imageUrl = BIN_IMAGES.other;
     }
 
