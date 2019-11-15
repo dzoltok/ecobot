@@ -30,6 +30,7 @@ function toSentenceCase(str) {
  */
 function formatSlackResponse(title, description, image) {
   return {
+    response_type: 'in_channel',
     blocks: [
       {
         type: 'section',
