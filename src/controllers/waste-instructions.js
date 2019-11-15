@@ -51,7 +51,7 @@ function getSlackResponse(item) {
             type: 'plain_text'
           },
           type: 'button',
-          value: 'open_override_modal'
+          value: 'submit_correction_modal'
         },
         text: {
           text: '_Is Ecobot wrong?_',
