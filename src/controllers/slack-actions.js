@@ -94,8 +94,8 @@ async function dispatchAction(action, payload) {
  */
 async function slackActionsController(req, res) {
   const payload = req.body.payload;
-  console.log(payload.actions);
-  const action = payload.actions[0].value;
+  console.log(payload['actions']);
+  const action = payload['actions'][0].value;
 
   return dispatchAction(action, payload)
     .then(data => res.send({ data }))
