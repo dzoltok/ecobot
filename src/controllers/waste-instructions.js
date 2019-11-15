@@ -53,7 +53,8 @@ function getSlackResponse(item) {
         ],
         type: 'context'
       }
-    ]
+    ],
+    response_type: 'in_channel'
   };
 }
 
