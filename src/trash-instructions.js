@@ -6,9 +6,9 @@ const RECOLLECT_API_URI = 'https://api.recollect.net/api/areas/recology-1051/ser
 
 // Required when fetching single items, as response structure is inconsistent otherwise
 const WIDGET_CONFIG = {
-  "theme":"recology",
-  "area":"recology-1051",
-}
+  theme: 'recology',
+  area: 'recology-1051'
+};
 
 /**
  *
@@ -35,20 +35,20 @@ function formatSlackResponse(title, description, image) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*${title}*\n${description}`,
+          text: `*${title}*\n${description}`
         },
         accessory: {
           type: 'image',
           image_url: `https://onemedical-ecobot.herokuapp.com/images/${image}.png`,
-          alt_text: image,
+          alt_text: image
         }
       },
       {
-        type: "context",
+        type: 'context',
         elements: [
           {
-            type: "mrkdwn",
-            text: "For more info, visit https://www.recology.com/recology-san-francisco/what-bin/"
+            type: 'mrkdwn',
+            text: 'For more info, visit https://www.recology.com/recology-san-francisco/what-bin/'
           }
         ]
       }
@@ -76,16 +76,18 @@ async function buildSlackResponse(searchTerm) {
     const results = await rp({
       json: true,
       qs: { suggest: searchTerm },
-      uri: `${RECOLLECT_API_URI}`,
+      uri: `${RECOLLECT_API_URI}`
     });
 
-    const bestResult = results.reduce((prev, current) => parseInt(current.score) > parseInt(prev.score) ? current : prev);
+    const bestResult = results.reduce((prev, current) =>
+      parseInt(current.score) > parseInt(prev.score) ? current : prev
+    );
 
     console.info(`Querying Recollect for details of best match "${bestResult.title}"`);
     const item = await rp({
       json: true,
       qs: { widget_config: JSON.stringify(WIDGET_CONFIG) },
-      uri: `${RECOLLECT_API_URI}/en-US/${bestResult.id}.json`,
+      uri: `${RECOLLECT_API_URI}/en-US/${bestResult.id}.json`
     });
 
     const itemImage = item.sections[1].className;
@@ -122,7 +124,7 @@ async function trashInstructionsController(req, res) {
       res.send({
         response_type: 'ephemeral',
         text: "Sorry, Ecobot couldn't process your message right now. Please try again."
-      })
+      });
     });
 }
 
