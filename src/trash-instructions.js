@@ -1,8 +1,8 @@
+const redisClient = require('./redis-client');
 const rp = require('request-promise');
 const striptags = require('striptags');
 
-const RECOLLECT_URL = 'https://api.recollect.net';
-const RECOLLECT_PATH = '/api/areas/recology-1051/services/waste/pages';
+const RECOLLECT_API_URI = 'https://api.recollect.net/api/areas/recology-1051/services/waste/pages';
 
 // Required when fetching single items, as response structure is inconsistent otherwise
 const WIDGET_CONFIG = {
@@ -10,26 +10,84 @@ const WIDGET_CONFIG = {
   "area":"recology-1051",
 }
 
+/**
+ *
+ *
+ * @param {string} str
+ * @returns {string}
+ */
 function toSentenceCase(str) {
-  return str.toLowerCase().replace(/(^\s*\w|[\.\!\?]\s*\w)/g, c => c.toUpperCase());
+  return str.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
 }
 
-const trashInstructions = (req, res) => {
-  const suggest = req.body.text;
+/**
+ *
+ *
+ * @param {string} title
+ * @param {string} description
+ * @param {string} image
+ * @returns {Object}
+ */
+function formatSlackResponse(title, description, image) {
+  return {
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*${title}*\n${description}`,
+        },
+        accessory: {
+          type: 'image',
+          image_url: `https://onemedical-ecobot.herokuapp.com/images/${image}.png`,
+          alt_text: image,
+        }
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "For more info, visit https://www.recology.com/recology-san-francisco/what-bin/"
+          }
+        ]
+      }
+    ]
+  };
+}
 
-  rp({
-    json: true,
-    qs: { suggest },
-    uri: `${RECOLLECT_URL}${RECOLLECT_PATH}`,
-  }).then(results => {
+/**
+ *
+ *
+ * @param {string} searchTerm
+ * @returns {Promise<Object>}
+ */
+async function buildSlackResponse(searchTerm) {
+  let slackResponse;
+
+  const reply = await redisClient.getAsync(searchTerm);
+
+  if (reply) {
+    // A cached Slack message for this search term exists
+    console.info(`Retrieving Slack response for ${searchTerm} from cache`);
+    slackResponse = JSON.parse(reply);
+  } else {
+    console.info(`Querying Recollect for items matching ${searchTerm}`);
+    const results = await rp({
+      json: true,
+      qs: { suggest: searchTerm },
+      uri: `${RECOLLECT_API_URI}`,
+    });
+
     const bestResult = results.reduce((prev, current) => parseInt(current.score) > parseInt(prev.score) ? current : prev);
 
-    return rp({
+    console.info(`Querying Recollect for details of best match "${bestResult.title}"`);
+    const item = await rp({
       json: true,
       qs: { widget_config: JSON.stringify(WIDGET_CONFIG) },
-      uri: `${RECOLLECT_URL}${RECOLLECT_PATH}/en-US/${bestResult.id}.json`,
+      uri: `${RECOLLECT_API_URI}/en-US/${bestResult.id}.json`,
     });
-  }).then(item => {
+
     const itemImage = item.sections[1].className;
     const itemTitle = toSentenceCase(item.sections[2].rows[0].html);
 
@@ -40,38 +98,32 @@ const trashInstructions = (req, res) => {
       itemDescription = striptags(itemDescriptionRow.html).trim();
     }
 
-    // Send back a Slack-formatted block response
-    res.send({
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*${itemTitle}*\n${itemDescription}`,
-          },
-          accessory: {
-            type: 'image',
-            image_url: `https://onemedical-ecobot.herokuapp.com/images/${itemImage}.png`,
-            alt_text: itemImage,
-          }
-        },
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: "For more info, visit https://www.recology.com/recology-san-francisco/what-bin/"
-            }
-          ]
-        }
-      ]
-    });
-  }).catch(_err => {
-    res.send({
-      response_type: 'ephemeral',
-      text: "Sorry, Ecobot couldn't process your message right now. Please try again."
-    });
-  });
+    slackResponse = formatSlackResponse(itemTitle, itemDescription, itemImage);
+    console.info(`Saving Slack response for ${searchTerm} to cache`);
+    await redisClient.setAsync(searchTerm, JSON.stringify(slackResponse));
+  }
+  return slackResponse;
 }
 
-module.exports = trashInstructions;
+/**
+ *
+ *
+ * @param {Express.Request} req
+ * @param {Express.Response} res
+ * @returns {Promise<Response | void>}
+ */
+async function trashInstructionsController(req, res) {
+  const suggest = req.body.text.toLowerCase();
+
+  return buildSlackResponse(suggest)
+    .then(response => res.send(response))
+    .catch(err => {
+      console.log(err);
+      res.send({
+        response_type: 'ephemeral',
+        text: "Sorry, Ecobot couldn't process your message right now. Please try again."
+      })
+    });
+}
+
+module.exports = trashInstructionsController;
