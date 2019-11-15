@@ -1,7 +1,20 @@
 import rp from 'request-promise';
 
+import { Bins } from '../data/bins.js';
+import sentenceCase from '../utils/sentence-case.js';
+
 async function openSubmitCorrectionModal(triggerId) {
   const accessToken = process.env.SLACK_ACCESS_TOKEN;
+
+  const formattedBins = Object.keys(Bins).map(key => {
+    return {
+      text: {
+        text: sentenceCase(Bins[key]),
+        type: 'plain_text'
+      },
+      value: Bins[key]
+    };
+  });
 
   const response = await rp({
     method: 'POST',
@@ -40,11 +53,12 @@ async function openSubmitCorrectionModal(triggerId) {
           {
             type: 'input',
             element: {
-              type: 'external_select',
+              type: 'static_select',
               placeholder: {
                 type: 'plain_text',
                 text: 'Select the correct bin for this item'
-              }
+              },
+              options: formattedBins
             },
             label: {
               type: 'plain_text',
@@ -78,16 +92,14 @@ async function openSubmitCorrectionModal(triggerId) {
       }
     },
     headers: {
-      charset: 'UTF-8',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`
+      Authorization: `Bearer ${accessToken}`,
+      charset: 'utf-8',
+      'Content-Type': 'application/json'
     },
     json: true
   });
 
-  console.log(response);
-
-  return { status: 'ok' };
+  return response;
 }
 
 async function dispatchAction(action, payload) {
