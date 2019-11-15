@@ -3,7 +3,7 @@ import rp from 'request-promise';
 async function openSubmitCorrectionModal(triggerId) {
   const accessToken = process.env.SLACK_ACCESS_TOKEN;
 
-  rp({
+  const response = rp({
     method: 'POST',
     uri: 'https://slack.com/api/views.open',
     body: {
@@ -74,11 +74,14 @@ async function openSubmitCorrectionModal(triggerId) {
     json: true
   });
 
+  console.log(response);
+
   return { status: 'ok' };
 }
 
 async function dispatchAction(action, payload) {
   if (action === 'submit_correction_modal') {
+    console.info(`dispatching action to open the Submit Correction modal with trigger ${payload.trigger_id}`);
     return openSubmitCorrectionModal(payload.trigger_id);
   } else {
     return { status: 'ok' };
@@ -94,7 +97,6 @@ async function dispatchAction(action, payload) {
  */
 async function slackActionsController(req, res) {
   const payload = JSON.parse(req.body.payload);
-  console.log(payload);
   const action = payload.actions[0].value;
 
   return dispatchAction(action, payload)
