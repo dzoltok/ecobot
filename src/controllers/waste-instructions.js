@@ -47,7 +47,6 @@ function getSlackResponse(item) {
       {
         accessory: {
           text: {
-            emoji: true,
             text: 'Submit a correction',
             type: 'plain_text'
           },
@@ -72,9 +71,12 @@ function getSlackResponse(item) {
  * @returns {Object} A waste item object with bin, title, and description
  */
 async function getWasteItemData(suggest) {
-  let data = await redisClient.getAsync(suggest);
+  let data;
+  const cachedData = await redisClient.getAsync(suggest);
 
-  if (!data) {
+  if (cachedData) {
+    data = JSON.parse(cachedData);
+  } else {
     console.info(`Querying Recollect for items matching ${suggest}`);
     const results = await rp({
       json: true,
