@@ -43,6 +43,22 @@ function getSlackResponse(item) {
           }
         ],
         type: 'context'
+      },
+      {
+        accessory: {
+          text: {
+            emoji: true,
+            text: 'Submit a correction',
+            type: 'plain_text'
+          },
+          type: 'button',
+          value: 'open_override_modal'
+        },
+        text: {
+          text: '_Is Ecobot wrong?_',
+          type: 'mrkdwn'
+        },
+        type: 'section'
       }
     ],
     response_type: 'in_channel'
