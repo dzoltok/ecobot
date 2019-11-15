@@ -3,6 +3,7 @@ import rp from 'request-promise';
 import striptags from 'striptags';
 
 import { binToImage, imageToBin } from '../data/bins.js';
+import sentenceCase from '../utils/sentence-case.js';
 
 // Required when fetching single items, as response structure is inconsistent otherwise
 const RECOLLECT_API_URI = 'https://api.recollect.net/api/areas/recology-1051/services/waste/pages';
@@ -10,16 +11,6 @@ const RECOLLECT_WIDGET_CONFIG = {
   theme: 'recology',
   area: 'recology-1051'
 };
-
-/**
- * Format a string into sentence case (first character uppercase, all others lowercase)
- *
- * @param {string} str
- * @returns {string}
- */
-function toSentenceCase(str) {
-  return str.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
-}
 
 /**
  * Return a Slack-friendly object given the information for a particular waste item
@@ -88,7 +79,7 @@ async function getWasteItemData(suggest) {
 
     const image = item.sections[1].className;
     const bin = imageToBin(image);
-    const title = toSentenceCase(item.sections[2].rows[0].html);
+    const title = sentenceCase(item.sections[2].rows[0].html);
 
     let description = '';
 

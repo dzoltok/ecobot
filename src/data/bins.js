@@ -1,4 +1,4 @@
-const Bins = {
+export const Bins = {
   COMPOST: 'compost',
   LANDFILL: 'landfill',
   OTHER: 'other',
