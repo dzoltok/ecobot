@@ -15,6 +15,16 @@ async function openSubmitCorrectionModal(triggerId) {
           type: 'plain_text',
           text: 'Submit a correction'
         },
+        submit: {
+          type: 'plain_text',
+          text: 'Submit',
+          emoji: true
+        },
+        close: {
+          type: 'plain_text',
+          text: 'Cancel',
+          emoji: true
+        },
         blocks: [
           {
             type: 'input',
@@ -68,6 +78,7 @@ async function openSubmitCorrectionModal(triggerId) {
       }
     },
     headers: {
+      charset: 'UTF-8',
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`
     },
