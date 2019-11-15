@@ -12,6 +12,7 @@ async function dispatchAction(action, triggerId) {
  * @returns {Promise<Response | void>}
  */
 async function slackActionsController(req, res) {
+  console.log(req.body);
   const action = req.body.actions[0].value;
   const triggerId = req.body.trigger_id;
 
