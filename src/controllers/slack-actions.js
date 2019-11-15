@@ -3,7 +3,7 @@ import rp from 'request-promise';
 async function openSubmitCorrectionModal(triggerId) {
   const accessToken = process.env.SLACK_ACCESS_TOKEN;
 
-  const response = rp({
+  const response = await rp({
     method: 'POST',
     uri: 'https://slack.com/api/views.open',
     body: {
