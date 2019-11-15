@@ -1,12 +1,12 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const trashInstructions = require('./trash-instructions');
+import bodyParser from 'body-parser';
+import express from 'express';
+import wasteInstructions from './controllers/waste-instructions.js';
 
-const app = express();
+export const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-app.post('/trash-instructions', trashInstructions);
+app.post('/waste-instructions', wasteInstructions);
 
-module.exports = app;
+export default app;

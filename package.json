@@ -1,13 +1,13 @@
 {
   "name": "ecobot",
   "version": "0.1.0",
-  "description": "A simple Node app that provides an interface to the Recology API for Slackbot purposes",
+  "description": "A barebones Node.js app using Express 4 that converts searches for waste items into Slack-friendly messages about how to dispose of them safely.",
   "engines": {
     "node": "12.x"
   },
   "main": "src/server.js",
   "scripts": {
-    "start": "nodemon src/server.js"
+    "start": "nodemon --experimental-modules src/server.js"
   },
   "dependencies": {
     "bluebird": "^3.7.1",
