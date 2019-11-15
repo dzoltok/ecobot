@@ -1,14 +1,8 @@
 const rp = require('request-promise');
+const striptags = require('striptags');
 
 const RECOLLECT_URL = 'https://api.recollect.net';
 const RECOLLECT_PATH = '/api/areas/recology-1051/services/waste/pages';
-
-const BIN_IMAGES = {
-  landfill: 'https://onemedical-ecobot.herokuapp.com/images/black-bin.png',
-  recycling: 'https://onemedical-ecobot.herokuapp.com/images/blue-bin.png',
-  compost: 'https://onemedical-ecobot.herokuapp.com/images/green-bin.png',
-  other: 'https://onemedical-ecobot.herokuapp.com/images/other-bin.png'
-}
 
 // Required when fetching single items, as response structure is inconsistent otherwise
 const WIDGET_CONFIG = {
@@ -36,16 +30,14 @@ const trashInstructions = (req, res) => {
       uri: `${RECOLLECT_URL}${RECOLLECT_PATH}/en-US/${bestResult.id}.json`,
     });
   }).then(item => {
-    const destination = item.sections[4].title.toLowerCase();
+    const itemImage = item.sections[1].className;
+    const itemTitle = toSentenceCase(item.sections[2].rows[0].html);
 
-    let description, imageUrl;
+    let itemDescription = '';
 
-    if (BIN_IMAGES[destination]) {
-      description = toSentenceCase(item.sections[2].rows[0].html);
-      imageUrl = BIN_IMAGES[destination];
-    } else {
-      description = `${item.sections[2].rows[0].html} requires special handling, please visit https://www.recology.com/recology-san-francisco/what-bin/ for more information.`;
-      imageUrl = BIN_IMAGES.other;
+    const itemDescriptionRow = item.sections[3].rows.find(row => row.type === 'html');
+    if (itemDescriptionRow) {
+      itemDescription = striptags(itemDescriptionRow.html).trim();
     }
 
     // Send back a Slack-formatted block response
@@ -55,20 +47,29 @@ const trashInstructions = (req, res) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: description,
+            text: `*${itemTitle}*\n${itemDescription}`,
           },
           accessory: {
             type: 'image',
-            image_url: imageUrl,
-            alt_text: destination,
+            image_url: `https://onemedical-ecobot.herokuapp.com/images/${itemImage}.png`,
+            alt_text: itemImage,
           }
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: "For more info, visit https://www.recology.com/recology-san-francisco/what-bin/"
+            }
+          ]
         }
       ]
     });
   }).catch(_err => {
     res.send({
       response_type: 'ephemeral',
-      'text': "Sorry, Ecobot couldn't process your message right now. Please try again."
+      text: "Sorry, Ecobot couldn't process your message right now. Please try again."
     });
   });
 }
