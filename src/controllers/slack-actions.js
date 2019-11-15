@@ -120,6 +120,7 @@ async function dispatchAction(action, payload) {
  */
 async function slackActionsController(req, res) {
   const payload = JSON.parse(req.body.payload);
+  console.debug(payload);
   const action = payload.actions[0].value;
 
   return dispatchAction(action, payload)
