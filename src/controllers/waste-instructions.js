@@ -127,7 +127,7 @@ async function getWasteItemData(suggest) {
  * @returns {Promise<Response | void>}
  */
 async function wasteInstructionsController(req, res) {
-  const suggest = req.body.text.toLowerCase();
+  const suggest = req.body.text.trim().toLowerCase();
 
   return getWasteItemData(suggest)
     .then(data => getSlackResponse(data))

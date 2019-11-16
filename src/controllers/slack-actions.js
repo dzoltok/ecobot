@@ -124,8 +124,9 @@ async function dispatchAction(action, payload) {
 async function handleSubmitCorrectionModal(values) {
   console.log(values);
 
-  const suggest = values['suggest-block']['suggest-value'].value.trim();
-  const bin = values['bin-block']['bin-value'].value;
+  const suggest = values['suggest-block']['suggest-value'].value.trim().toLowerCase();
+  console.log(`found bin selected option ${values['bin-block']['bin-value'].selected_option}`);
+  const bin = values['bin-block']['bin-value'].selected_option.value;
   const title = values['title-block']['title-value'].value.trim();
   const description = values['description-block']['description-value'].value.trim();
 
