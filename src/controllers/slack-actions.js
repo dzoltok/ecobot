@@ -122,10 +122,7 @@ async function dispatchAction(action, payload) {
 }
 
 async function handleSubmitCorrectionModal(values) {
-  console.log(values);
-
   const suggest = values['suggest-block']['suggest-value'].value.trim().toLowerCase();
-  console.log(`found bin selected option ${values['bin-block']['bin-value'].selected_option}`);
   const bin = values['bin-block']['bin-value'].selected_option.value;
   const title = values['title-block']['title-value'].value.trim();
   const description = values['description-block']['description-value'].value.trim();
@@ -136,7 +133,7 @@ async function handleSubmitCorrectionModal(values) {
     title
   };
 
-  console.info(`Saving item details for ${suggest} to cache`);
+  console.info(`Saving updated item details for ${suggest} to cache`);
   await redisClient.setAsync(suggest, JSON.stringify(itemData));
 
   return { status: 'ok' };
@@ -159,8 +156,6 @@ async function dispatchViewSubmission(view, payload) {
  */
 async function slackActionsController(req, res) {
   const payload = JSON.parse(req.body.payload);
-
-  console.debug(payload);
 
   if (payload.type === 'block_actions') {
     const action = payload.actions[0].value;
