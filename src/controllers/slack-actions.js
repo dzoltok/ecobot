@@ -2,6 +2,7 @@ import rp from 'request-promise';
 
 import { Bins } from '../data/bins.js';
 import sentenceCase from '../utils/sentence-case.js';
+import redisClient from '../redis-client.js';
 
 async function openSubmitCorrectionModal(triggerId) {
   const accessToken = process.env.SLACK_ACCESS_TOKEN;
@@ -41,8 +42,10 @@ async function openSubmitCorrectionModal(triggerId) {
         blocks: [
           {
             type: 'input',
+            block_id: 'suggest-block',
             element: {
-              type: 'plain_text_input'
+              type: 'plain_text_input',
+              action_id: 'suggest-value'
             },
             label: {
               type: 'plain_text',
@@ -52,7 +55,9 @@ async function openSubmitCorrectionModal(triggerId) {
           },
           {
             type: 'input',
+            block_id: 'bin-block',
             element: {
+              action_id: 'bin-value',
               type: 'static_select',
               placeholder: {
                 type: 'plain_text',
@@ -68,8 +73,10 @@ async function openSubmitCorrectionModal(triggerId) {
           },
           {
             type: 'input',
+            block_id: 'title-block',
             element: {
-              type: 'plain_text_input'
+              type: 'plain_text_input',
+              action_id: 'title-value'
             },
             label: {
               type: 'plain_text',
@@ -79,8 +86,11 @@ async function openSubmitCorrectionModal(triggerId) {
           },
           {
             type: 'input',
+            block_id: 'description-block',
             element: {
-              type: 'plain_text_input'
+              type: 'plain_text_input',
+              multiline: true,
+              action_id: 'description-value'
             },
             label: {
               type: 'plain_text',
@@ -111,6 +121,34 @@ async function dispatchAction(action, payload) {
   }
 }
 
+async function handleSubmitCorrectionModal(values) {
+  console.log(values);
+
+  const suggest = values['suggest-block']['suggest-value'].value;
+  const bin = values['bin-block']['bin-value'].value;
+  const title = values['title-block']['title-value'].value;
+  const description = values['description-block']['description-value'].value;
+
+  const itemData = {
+    bin,
+    description,
+    title
+  };
+
+  console.info(`Saving item details for ${suggest} to cache`);
+  await redisClient.setAsync(suggest, JSON.stringify(itemData));
+
+  return { status: 'ok' };
+}
+
+async function dispatchViewSubmission(view, payload) {
+  if (view === 'submit_correction_modal') {
+    console.info(`handling submission of Submit Correction modal`);
+    return handleSubmitCorrectionModal(payload.view.state.values);
+  } else {
+    return { status: 'ok' };
+  }
+}
 /**
  *
  *
@@ -120,12 +158,20 @@ async function dispatchAction(action, payload) {
  */
 async function slackActionsController(req, res) {
   const payload = JSON.parse(req.body.payload);
-  console.debug(payload);
-  const action = payload.actions[0].value;
 
-  return dispatchAction(action, payload)
-    .then(data => res.send({ data }))
-    .catch(error => res.send({ error }));
+  if (payload.type === 'block_actions') {
+    const action = payload.actions[0].value;
+
+    return dispatchAction(action, payload)
+      .then(data => res.send({ data }))
+      .catch(error => res.send({ error }));
+  } else if (payload.type === 'view_submisson') {
+    const view = payload.view.callback_id;
+
+    return dispatchViewSubmission(view, payload)
+      .then(data => res.send({ data }))
+      .catch(error => res.send({ error }));
+  }
 }
 
 export default slackActionsController;
