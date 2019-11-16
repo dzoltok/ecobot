@@ -167,7 +167,7 @@ async function slackActionsController(req, res) {
     return dispatchAction(action, payload)
       .then(data => res.send({ data }))
       .catch(error => res.send({ error }));
-  } else if (payload.type === 'view_submisson') {
+  } else if (payload.type === 'view_submission') {
     const view = payload.view.callback_id;
 
     return dispatchViewSubmission(view, payload)
