@@ -159,6 +159,8 @@ async function dispatchViewSubmission(view, payload) {
 async function slackActionsController(req, res) {
   const payload = JSON.parse(req.body.payload);
 
+  console.debug(payload);
+
   if (payload.type === 'block_actions') {
     const action = payload.actions[0].value;
 
