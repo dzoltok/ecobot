@@ -136,7 +136,9 @@ async function handleSubmitCorrectionModal(values) {
   console.info(`Saving updated item details for ${suggest} to cache`);
   const reply = await redisClient.setAsync(suggest, JSON.stringify(itemData));
 
-  return reply;
+  if (reply === 'OK') {
+    return { response_action: 'clear' };
+  }
 }
 
 async function dispatchViewSubmission(view, payload) {
@@ -147,6 +149,7 @@ async function dispatchViewSubmission(view, payload) {
     return { status: 'ok' };
   }
 }
+
 /**
  *
  *
@@ -175,7 +178,7 @@ async function slackActionsController(req, res) {
     return dispatchViewSubmission(view, payload)
       .then(data => {
         console.debug(data);
-        res.send({ data });
+        res.send(data);
       })
       .catch(error => {
         console.error(error);
