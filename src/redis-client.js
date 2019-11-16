@@ -3,6 +3,7 @@ import redis from 'redis';
 
 bluebird.promisifyAll(redis);
 
+console.log('REDIS_URL', process.env.REDIS_URL);
 const client = redis.createClient(process.env.REDIS_URL);
 
 client.on('connect', () => {

@@ -66,7 +66,7 @@ function getSlackResponse(item) {
  */
 async function getWasteItemData(suggest) {
   let data = await redisClient.getAsync(suggest);
-
+  console.log('DATA:', data);
   if (!data) {
     console.info(`Querying Recollect for items matching ${suggest}`);
     const results = await rp({
